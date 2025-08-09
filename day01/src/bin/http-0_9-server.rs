@@ -1,7 +1,7 @@
 use std::io::Result;
 
 use tokio::{
-    io::{AsyncBufReadExt, AsyncReadExt},
+    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
 };
 
@@ -13,7 +13,7 @@ async fn main() -> Result<()> {
         let (mut tcp_stream, _client_socket_address) = listener.accept().await?;
         // dbg!(&tcp_stream);
         // dbg!(client_socket_address);
-        let (mut reader, _writer) = tcp_stream.split();
+        let (mut reader, mut writer) = tcp_stream.split();
         let mut buffer: [u8; 200] = [0; 200];
         let _n = reader.read(&mut buffer).await?;
         // dbg!(buffer);
@@ -31,6 +31,8 @@ async fn main() -> Result<()> {
             };
             if let Some(path) = words.next() {
                 println!("path = {}", path);
+                let response_html = format!("<html><title>Welcome</title><body><h1>HTTP 0.9</h1><p>you requested {}</p></body></html>", path);
+                writer.write_all(response_html.as_bytes()).await?;
             } else {
                 println!("no path");
                 continue;
