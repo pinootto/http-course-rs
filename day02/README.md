@@ -13,3 +13,5 @@ For testing the client, you can use this server HTTP 1.0 written in go:
 https://github.com/sudorandom/kmcd.dev/blob/main/content/posts/2024/http1.0-from-scratch/go/server/main.go
 
 https://kmcd.dev/posts/http1.0-from-scratch/
+
+or use "python3 -m http.server"
