@@ -53,9 +53,6 @@ async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
 
     // body
     println!("body:");
-    // while let Some(line) = line_iter.next() {
-    //     println!("{}", line);
-    // }
     for line in line_iter {
         println!("{}", line);
     }
@@ -63,7 +60,6 @@ async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
     Ok(())
 }
 
-// const ADDRESS_PORT: &str = "localhost:9000";
 const DOMAIN: &str = "gioyingtec.com";
 const PORT: &str = "443";
 
