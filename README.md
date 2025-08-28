@@ -13,3 +13,8 @@ HTTP 1.0
 ## Day 3
 
 HTTP 1.0 with TLS (HTTPS)
+
+## Day 4
+
+HTTP 1.1
+
