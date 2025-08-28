@@ -1,7 +1,7 @@
 use std::io::Result;
 use std::sync::Arc;
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
 };
 use tokio_rustls::TlsConnector;
@@ -10,10 +10,18 @@ use tokio_rustls::{
     rustls::{pki_types::ServerName, ClientConfig, RootCertStore},
 };
 
+async fn read_line(tls_stream: &mut TlsStream<TcpStream>) -> Result<String> {
+    let mut line = String::new();
+    let n_bytes = tls_stream.read_line(&mut line).await?;
+    println!("read {} bytes in line: {}", n_bytes, line);
+    Ok(line)
+}
+
 async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
     // read response
-    let mut response = String::new();
-    let _ = tls_stream.read_to_string(&mut response).await?;
+    // let mut response = String::new();
+    // let _ = tls_stream.read_to_string(&mut response).await?;
+    let mut response = read_line(tls_stream).await?;
     println!("response:");
     println!("{response}");
     println!();
