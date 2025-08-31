@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::usize;
 use std::{collections::HashMap, io::Result};
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt},
@@ -56,8 +57,7 @@ async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
             break;
         }
     }
-    println!();
-    for header in headers {
+    for header in &headers {
         println!("{}: {}", header.0, header.1);
     }
     println!();
@@ -65,6 +65,14 @@ async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
     // body
     println!("body:");
     //todo
+    let body_length = headers.get("Content-Length").unwrap();
+    println!("Content-Length = {}", body_length);
+    let size: usize = body_length.parse().unwrap();
+    let mut body: Vec<u8> = Vec::new();
+    for _ in 0..size {
+        body.push(tls_stream.read_u8().await?);
+    }
+    println!("{}", String::from_utf8(body).unwrap());
     println!("--------------------------------");
     Ok(())
 }
