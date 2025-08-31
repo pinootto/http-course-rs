@@ -21,16 +21,14 @@ async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
     // read response
     // let mut response = String::new();
     // let _ = tls_stream.read_to_string(&mut response).await?;
-    let mut response = read_line(tls_stream).await?;
-    println!("response:");
-    println!("{response}");
+    let mut line = String::new();
+    let n_bytes = tls_stream.read_line(&mut line).await?;
+    println!("read {} bytes in line: {}", n_bytes, line);
     println!();
 
-    let mut line_iter = response.lines();
     // first line
     println!("first line:");
-    let first_line = line_iter.next().unwrap();
-    let mut tokens = first_line.split_whitespace();
+    let mut tokens = line.split_whitespace();
     if let Some(protocol) = tokens.next() {
         println!("protocol = {}", protocol);
     } else {
@@ -46,24 +44,20 @@ async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
     // headers
     println!("headers:");
     loop {
-        let line = line_iter.next();
-        if let Some(header) = line {
-            if !header.is_empty() {
-                println!("header = {}", header);
-            } else {
-                break;
-            }
+        let mut line = String::new();
+        let n_bytes = tls_stream.read_line(&mut line).await?;
+        // println!("read {} bytes in line: {}", n_bytes, line);
+        if !line.trim().is_empty() {
+            println!("header = {}", line);
         } else {
-            panic!();
+            break;
         }
     }
     println!();
 
     // body
     println!("body:");
-    for line in line_iter {
-        println!("{}", line);
-    }
+    //todo
     println!("--------------------------------");
     Ok(())
 }
