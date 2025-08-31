@@ -1,5 +1,5 @@
-use std::io::Result;
 use std::sync::Arc;
+use std::{collections::HashMap, io::Result};
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
@@ -18,9 +18,6 @@ async fn read_line(tls_stream: &mut TlsStream<TcpStream>) -> Result<String> {
 }
 
 async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
-    // read response
-    // let mut response = String::new();
-    // let _ = tls_stream.read_to_string(&mut response).await?;
     let mut line = String::new();
     let n_bytes = tls_stream.read_line(&mut line).await?;
     println!("read {} bytes in line: {}", n_bytes, line);
@@ -43,15 +40,25 @@ async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
 
     // headers
     println!("headers:");
+    let mut headers = HashMap::new();
     loop {
         let mut line = String::new();
-        let n_bytes = tls_stream.read_line(&mut line).await?;
+        let _ = tls_stream.read_line(&mut line).await?;
         // println!("read {} bytes in line: {}", n_bytes, line);
         if !line.trim().is_empty() {
-            println!("header = {}", line);
+            // println!("header = {}", line);
+            let key_value = line.split_once(":").unwrap();
+            headers.insert(
+                key_value.0.trim().to_string(),
+                key_value.1.trim().to_string(),
+            );
         } else {
             break;
         }
+    }
+    println!();
+    for header in headers {
+        println!("{}: {}", header.0, header.1);
     }
     println!();
 
