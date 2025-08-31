@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use std::usize;
 use std::{collections::HashMap, io::Result};
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt},
@@ -10,13 +9,6 @@ use tokio_rustls::{
     client::TlsStream,
     rustls::{pki_types::ServerName, ClientConfig, RootCertStore},
 };
-
-async fn read_line(tls_stream: &mut TlsStream<TcpStream>) -> Result<String> {
-    let mut line = String::new();
-    let n_bytes = tls_stream.read_line(&mut line).await?;
-    println!("read {} bytes in line: {}", n_bytes, line);
-    Ok(line)
-}
 
 async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
     let mut line = String::new();
@@ -45,9 +37,7 @@ async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
     loop {
         let mut line = String::new();
         let _ = tls_stream.read_line(&mut line).await?;
-        // println!("read {} bytes in line: {}", n_bytes, line);
         if !line.trim().is_empty() {
-            // println!("header = {}", line);
             let key_value = line.split_once(":").unwrap();
             headers.insert(
                 key_value.0.trim().to_string(),
@@ -64,8 +54,9 @@ async fn read_response(tls_stream: &mut TlsStream<TcpStream>) -> Result<()> {
 
     // body
     println!("body:");
-    //todo
-    let body_length = headers.get("Content-Length").unwrap();
+    let body_length = headers
+        .get("Content-Length")
+        .ok_or_else(|| std::io::Error::other("missing Content-Length header"))?;
     println!("Content-Length = {}", body_length);
     let size: usize = body_length.parse().unwrap();
     let mut body: Vec<u8> = Vec::new();
@@ -91,6 +82,7 @@ async fn main() -> Result<()> {
     let tls_connector = TlsConnector::from(Arc::new(config));
     let dnsname = ServerName::try_from(DOMAIN).unwrap();
     let url = format!("{}:{}", DOMAIN, PORT);
+
     // connect to the server
     let tcp_stream = TcpStream::connect(url.as_str()).await?;
     let mut tls_stream = tls_connector.connect(dnsname.clone(), tcp_stream).await?;
@@ -105,23 +97,19 @@ async fn main() -> Result<()> {
 
     read_response(&mut tls_stream).await?;
 
-    // for each request we need to connect to the server again
-    let tcp_stream = TcpStream::connect(url.as_str()).await?;
-    let mut tls_stream = tls_connector.connect(dnsname.clone(), tcp_stream).await?;
+    // we can reuse the connection for a new request
 
     // send GET request
-    tls_stream.write_all(b"GET /headers HTTP/1.0\r\n").await?;
+    tls_stream.write_all(b"GET / HTTP/1.1\r\n").await?;
     tls_stream.write_all(b"host: gioyingtec.com\r\n").await?;
     tls_stream.write_all(b"\r\n").await?;
 
     read_response(&mut tls_stream).await?;
 
-    // for each request we need to connect to the server again
-    let tcp_stream = TcpStream::connect(url.as_str()).await?;
-    let mut tls_stream = tls_connector.connect(dnsname, tcp_stream).await?;
+    // we can reuse the connection for a new request
 
     // send POST request
-    tls_stream.write_all(b"POST /echo HTTP/1.0\r\n").await?;
+    tls_stream.write_all(b"POST /echo HTTP/1.1\r\n").await?;
     // headers
     let request_body = "name=pippo&age=3";
     let header_1 = format!("content-length: {}\r\n", request_body.len());
