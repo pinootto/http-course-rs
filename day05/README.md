@@ -1,6 +1,6 @@
 # Day 5
 
-## HTTP 1.1 with TLS (HTTPS) with chunks
+## HTTP 1.1 with TLS (HTTPS) and chunks
 
 We write a simplified client that follows the specifications of HTTP 1.1 with chunks and connects to HTTPS server
 

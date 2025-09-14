@@ -1,6 +1,6 @@
 # Day 6
 
-## HTTP 1.1 with TLS (HTTPS) with gzip compression
+## HTTP 1.1 with TLS (HTTPS) and gzip compression
 
 We write a simplified client that follows the specifications of HTTP 1.1 with gzip compression and connects to HTTPS server
 

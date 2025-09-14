@@ -20,10 +20,10 @@ HTTP 1.1 with TLS (HTTPS)
 
 ## Day 5
 
-HTTP 1.1 with TLS (HTTPS) with chunks
+HTTP 1.1 with TLS (HTTPS) and chunks
 
 ## Day 6
 
-HTTP 1.1 with TLS (HTTPS) with gzip compression
+HTTP 1.1 with TLS (HTTPS) and gzip compression
 
 
