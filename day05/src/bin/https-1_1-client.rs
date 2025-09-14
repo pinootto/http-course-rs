@@ -109,6 +109,19 @@ impl HttpConnection {
         {
             println!("received chunked body");
             //todo
+            loop {
+                let mut line = String::new();
+                let _ = self.tls_stream.read_line(&mut line).await?;
+                let chunk_size = usize::from_str_radix(line.trim(), 16).unwrap();
+                if chunk_size == 0 {
+                    break;
+                }
+                for _ in 0..chunk_size {
+                    body.push(self.tls_stream.read_u8().await?);
+                }
+                self.read_newline().await?;
+            }
+            self.read_newline().await?;
         } else {
             let body_length = response
                 .headers
@@ -126,6 +139,16 @@ impl HttpConnection {
         response.body = body;
 
         Ok(response)
+    }
+
+    async fn read_newline(&mut self) -> Result<()> {
+        if char::from(self.tls_stream.read_u8().await?) != '\r' {
+            std::io::Error::other("bad response: missing carriage return");
+        }
+        if char::from(self.tls_stream.read_u8().await?) != '\n' {
+            std::io::Error::other("bad response: missing new line");
+        }
+        Ok(())
     }
 }
 
@@ -194,7 +217,7 @@ async fn main() -> Result<()> {
     let mut http_connection = HttpConnection::new(DOMAIN.to_string(), PORT).await?;
 
     let request = HttpRequest::get(Url::parse("https://gioyingtec.com").unwrap());
-    let response = http_connection.send(request).await?;
+    let _response = http_connection.send(request).await?;
 
     let request = HttpRequest::get(Url::parse("https://gioyingtec.com").unwrap());
     let response = http_connection.send(request).await?;
