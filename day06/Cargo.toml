@@ -4,3 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+tokio = { version = "1.47.1", features = ["full"] }
+webpki-roots = "1"
+tokio-rustls = "0.26.2"
+url = "2.5.7"
+strum = { version = "0.27.2", features = ["derive"] }
+strum_macros = "0.27.2"
+flate2 = "1.1.2"

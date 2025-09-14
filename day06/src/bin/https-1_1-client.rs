@@ -1,3 +1,5 @@
+use flate2::read::GzDecoder;
+use std::io::Read;
 use std::string::ToString;
 use std::sync::Arc;
 use std::{collections::HashMap, io::Result};
@@ -57,13 +59,14 @@ impl HttpConnection {
 
         // read the response
         let mut response = HttpResponse::default();
+        println!("response:");
         // first line
         let mut line = String::new();
         let n_bytes = self.tls_stream.read_line(&mut line).await?;
-        println!("read {} bytes in line: {}", n_bytes, line);
+        println!("read {} bytes in first line: {}", n_bytes, line);
         println!();
 
-        println!("first line:");
+        println!("from first line:");
         let mut tokens = line.split_whitespace();
         if let Some(protocol) = tokens.next() {
             println!("protocol = {}", protocol);
@@ -79,7 +82,7 @@ impl HttpConnection {
         println!();
 
         // headers
-        println!("headers:");
+        println!("response headers:");
         loop {
             let mut line = String::new();
             let _ = self.tls_stream.read_line(&mut line).await?;
@@ -99,7 +102,7 @@ impl HttpConnection {
         println!();
 
         // body
-        println!("body:");
+        println!("response body:");
         let mut body: Vec<u8> = Vec::new();
         if request.method == HttpMethod::Head {
             println!("no body for HEAD request");
@@ -133,10 +136,27 @@ impl HttpConnection {
                 body.push(self.tls_stream.read_u8().await?);
             }
         }
-
-        println!("{}", String::from_utf8(body.clone()).unwrap());
-        println!("--------------------------------");
         response.body = body;
+
+        // handle gzip
+        if let Some(content_encoding) = response.headers.get("Content-Encoding")
+            && content_encoding == "gzip"
+        {
+            println!("received gzipped body");
+            let body = response.body;
+            println!("compressed body lenght = {}", body.len());
+            let mut decoder = GzDecoder::new(body.as_slice());
+            let mut uncompressed_body = String::new();
+            let lenght = decoder.read_to_string(&mut uncompressed_body).unwrap();
+            println!(
+                "uncompressed_body lenght = {}\nuncompressed_body = \n{}",
+                lenght, uncompressed_body
+            );
+            response.body = uncompressed_body.into_bytes();
+        }
+
+        // println!("{}", String::from_utf8(body.clone()).unwrap());
+        println!("--------------------------------");
 
         Ok(response)
     }
@@ -191,6 +211,7 @@ impl HttpRequest {
     fn get(uri: Url) -> Self {
         let mut headers = HashMap::new();
         headers.insert("host".to_string(), uri.host_str().unwrap().to_string());
+        headers.insert("accept-encoding".to_string(), "gzip".to_string());
         let body: Vec<u8> = Vec::new();
         Self {
             method: HttpMethod::Get,
