@@ -16,5 +16,10 @@ HTTP 1.0 with TLS (HTTPS)
 
 ## Day 4
 
-HTTP 1.1
+HTTP 1.1 with TLS (HTTPS)
+
+## Day 5
+
+HTTP 1.1 with TLS (HTTPS) with chunks
+
 
