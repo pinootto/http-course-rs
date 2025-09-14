@@ -22,4 +22,8 @@ HTTP 1.1 with TLS (HTTPS)
 
 HTTP 1.1 with TLS (HTTPS) with chunks
 
+## Day 6
+
+HTTP 1.1 with TLS (HTTPS) with gzip compression
+
 

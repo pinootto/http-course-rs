@@ -108,6 +108,7 @@ impl HttpConnection {
             && encoding == "chunked"
         {
             println!("received chunked body");
+            //todo
             loop {
                 let mut line = String::new();
                 let _ = self.tls_stream.read_line(&mut line).await?;
